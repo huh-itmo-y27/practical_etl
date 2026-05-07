@@ -80,6 +80,7 @@ services:
     command: >
       /bin/bash -c "
       set -euo pipefail &&
+      pip install --no-cache-dir psycopg2-binary &&
       rm -f /app/superset_home/superset.db &&
       superset db upgrade &&
       superset fab create-admin
