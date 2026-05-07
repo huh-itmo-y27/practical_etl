@@ -58,3 +58,9 @@ make run-prefect-events
 ```bash
 uv run prefect server start
 ```
+
+Then open:
+- UI: `http://127.0.0.1:4200/`
+- API base: `http://127.0.0.1:4200/api`
+
+Note: in Prefect 3, `/v2` is not a valid UI/API route.

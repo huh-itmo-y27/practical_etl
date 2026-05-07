@@ -218,3 +218,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Prefect
+.prefect/
+prefect_demo/data/*
+
+# Dagster
+dagster_demo/.tmp*
+dagster_demo/data/*

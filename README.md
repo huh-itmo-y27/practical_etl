@@ -108,8 +108,8 @@ make superset-bootstrap-assets
 
 Verify output markers:
 
-- `airflow_demo/data/superset_batch_publish_marker.json`
-- `airflow_demo/data/superset_events_publish_marker.json`
+- `.airflow_home/data/superset_batch_publish_marker.json`
+- `.airflow_home/data/superset_events_publish_marker.json`
 
 ### Prefect demo
 
@@ -153,7 +153,7 @@ make run-dagster-materialize
 ### Superset demo
 
 1. Open Superset: `http://localhost:8088`
-2. Login with credentials from `.env.example` (default `admin/admin`)
+2. Login with credentials from `.env` (default `admin/admin`)
 3. Ensure datasets are present (run once if needed):
   - `make superset-bootstrap-assets`
 4. Query datasets:
