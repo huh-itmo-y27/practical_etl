@@ -40,7 +40,6 @@ Expected outcome:
 
 ## Setup
 ```bash
-cd tbd/practical_etl
 make setup
 make infra-up
 make seed-data
