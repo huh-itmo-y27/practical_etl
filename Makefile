@@ -3,8 +3,9 @@ AIRFLOW_VERSION ?= 3.0.2
 AIRFLOW_HOME ?= $(CURDIR)/.airflow_home
 VENV ?= .venv
 AIRFLOW_VENV ?= .venv-airflow
+ENV_FILE ?= .env
 
-.PHONY: help venv sync airflow-venv airflow-install setup setup-shared airflow-prepare run-airflow run-prefect run-dagster run-airflow-advanced run-prefect-batch run-prefect-events run-dagster-materialize infra-up infra-down superset-init superset-open superset-health superset-bootstrap-assets seed-data publish-events clean-airflow validate verify-all
+.PHONY: help venv sync airflow-venv airflow-install setup setup-shared airflow-prepare run-airflow run-prefect run-dagster run-airflow-advanced run-prefect-batch run-prefect-events run-dagster-materialize ensure-env infra-up infra-down superset-init superset-open superset-health superset-bootstrap-assets seed-data publish-events clean-airflow validate verify-all
 
 help:
 	@echo "Available targets:"
@@ -72,10 +73,18 @@ run-dagster-materialize: sync
 	cd dagster_demo && ../$(VENV)/bin/python -c "from definitions import defs; defs.get_implicit_global_asset_job_def().execute_in_process()"
 
 infra-up:
-	docker compose --env-file .env.example up -d
+	@$(MAKE) ensure-env
+	docker compose --env-file "$(ENV_FILE)" up -d
 
 infra-down:
-	docker compose --env-file .env.example down -v
+	@$(MAKE) ensure-env
+	docker compose --env-file "$(ENV_FILE)" down -v
+
+ensure-env:
+	@if [ ! -f "$(ENV_FILE)" ]; then \
+		echo "Missing $(ENV_FILE). Copy .env.example to $(ENV_FILE) and update values."; \
+		exit 1; \
+	fi
 
 superset-init:
 	./scripts/superset_bootstrap.sh

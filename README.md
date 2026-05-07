@@ -57,11 +57,13 @@ Run from repository root:
 
 ```bash
 cd tbd/practical_etl
+cp .env.example .env
 make setup
 make airflow-install
 ```
 
 This creates local environments and installs Python dependencies.
+Also adjust values in `.env` if needed before starting infrastructure.
 
 ---
 

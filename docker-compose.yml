@@ -58,7 +58,7 @@ services:
       - "${MINIO_CONSOLE_PORT:-9001}:9001"
 
   superset:
-    image: apache/superset:latest
+    image: apache/superset:4.1.1
     depends_on:
       postgres:
         condition: service_healthy
@@ -80,7 +80,6 @@ services:
     command: >
       /bin/bash -c "
       set -euo pipefail &&
-      /app/.venv/bin/python -m pip install --no-cache-dir psycopg2-binary &&
       rm -f /app/superset_home/superset.db &&
       superset db upgrade &&
       superset fab create-admin
