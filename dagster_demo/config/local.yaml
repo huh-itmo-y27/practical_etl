@@ -1,0 +1,3 @@
+postgres_host: localhost
+postgres_port: 5433
+kafka_bootstrap: localhost:19092
