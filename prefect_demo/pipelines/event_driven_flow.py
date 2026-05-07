@@ -81,9 +81,15 @@ def event_driven_flow() -> None:
     processed = upsert(unique)
     write_outputs(processed)
     create_table_artifact(
+        table=[
+            {
+                "received": len(events),
+                "unique": len(unique),
+                "upserted": processed,
+            }
+        ],
         key="prefect-events-summary",
-        table=[[len(events), len(unique), processed]],
-        columns=["received", "unique", "upserted"],
+        description="Event ingestion summary for the current run.",
     )
 
 

@@ -62,9 +62,18 @@ def batch_loaded_to_csv(batch_transformed_rows: list[dict]) -> MaterializeResult
 
 
 @asset_check(asset=batch_loaded_to_csv)
-def batch_quality_check(batch_transformed_rows: list[dict]) -> AssetCheckResult:
-    passed = len(batch_transformed_rows) >= 3
-    return AssetCheckResult(passed=passed, metadata={"rows_after_transform": len(batch_transformed_rows)})
+def batch_quality_check() -> AssetCheckResult:
+    if not BATCH_OUTPUT.exists():
+        return AssetCheckResult(passed=False, metadata={"reason": f"missing output file: {BATCH_OUTPUT}"})
+
+    with BATCH_OUTPUT.open("r", encoding="utf-8", newline="") as f:
+        rows = list(csv.DictReader(f))
+
+    passed = len(rows) >= 3
+    return AssetCheckResult(
+        passed=passed,
+        metadata={"rows_after_transform": len(rows), "checked_file": str(BATCH_OUTPUT)},
+    )
 
 
 @asset(group_name="advanced_events")
