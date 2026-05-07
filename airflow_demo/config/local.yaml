@@ -1,0 +1,4 @@
+postgres_host: localhost
+postgres_port: 5433
+minio_endpoint: localhost:9000
+kafka_bootstrap: localhost:19092

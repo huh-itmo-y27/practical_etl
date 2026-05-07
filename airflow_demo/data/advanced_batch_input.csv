@@ -1,0 +1,5 @@
+order_id,user_id,qty,price,category,event_date
+11,201,2,120.0,electronics,2026-05-01
+12,202,1,75.5,books,2026-05-01
+13,201,4,9.9,groceries,2026-05-02
+14,203,2,49.0,sports,2026-05-02

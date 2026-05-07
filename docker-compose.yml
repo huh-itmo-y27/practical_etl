@@ -1,0 +1,93 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-demo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-demo}
+      POSTGRES_DB: ${POSTGRES_DB:-orchestration_demo}
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-demo} -d ${POSTGRES_DB:-orchestration_demo}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "${REDIS_PORT:-6380}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:${KAFKA_EXTERNAL_PORT:-19092}
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    ports:
+      - "${KAFKA_PORT:-9092}:9092"
+      - "${KAFKA_EXTERNAL_PORT:-19092}:19092"
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+
+  superset:
+    image: apache/superset:latest
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY:-this_needs_to_be_changed_for_prod}
+      SUPERSET_CONFIG_PATH: /app/pythonpath/superset_config.py
+      SUPERSET_ADMIN_USER: ${SUPERSET_ADMIN_USER:-admin}
+      SUPERSET_ADMIN_PASSWORD: ${SUPERSET_ADMIN_PASSWORD:-admin}
+      SUPERSET_ADMIN_EMAIL: ${SUPERSET_ADMIN_EMAIL:-admin@example.com}
+      SUPERSET_DB_HOST: postgres
+      SUPERSET_DB_PORT: 5432
+      SUPERSET_DB_USER: ${POSTGRES_USER:-demo}
+      SUPERSET_DB_PASSWORD: ${POSTGRES_PASSWORD:-demo}
+      SUPERSET_DB_NAME: ${POSTGRES_DB:-orchestration_demo}
+    ports:
+      - "${SUPERSET_PORT:-8088}:8088"
+    volumes:
+      - ./scripts/superset_config.py:/app/pythonpath/superset_config.py:ro
+    command: >
+      /bin/bash -c "
+      set -euo pipefail &&
+      /app/.venv/bin/python -m pip install --no-cache-dir psycopg2-binary &&
+      rm -f /app/superset_home/superset.db &&
+      superset db upgrade &&
+      superset fab create-admin
+      --username ${SUPERSET_ADMIN_USER:-admin}
+      --firstname Superset
+      --lastname Admin
+      --email ${SUPERSET_ADMIN_EMAIL:-admin@example.com}
+      --password ${SUPERSET_ADMIN_PASSWORD:-admin} || true &&
+      superset init &&
+      superset run -h 0.0.0.0 -p 8088"
